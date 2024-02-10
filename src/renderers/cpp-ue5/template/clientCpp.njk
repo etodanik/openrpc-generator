@@ -1,0 +1,44 @@
+{% extends "layout.njk" %}
+{% import "macros.njk" as macros %}
+
+{% block main %}
+#include "{{ pluginName }}Client.h"
+
+#include "HttpTransport.h"
+#include "JsonObjectConverter.h"
+#include "JsonRpcClient.h"
+
+U{{ pluginName }}Client::U{{ pluginName }}Client()
+{
+}
+
+U{{ pluginName }}Client::U{{ pluginName }}Client(UJsonRpcClient* InJsonRpcClient) : JsonRpcClient(InJsonRpcClient)
+{
+}
+
+void U{{ pluginName }}Client::InitHttpTransport(FString Url)
+{
+	JsonRpcClient = NewObject<UJsonRpcClient>();
+	UHttpTransport* Transport = NewObject<UHttpTransport>();
+	JsonRpcClient->Initialize(Transport);
+}
+
+{% for method in methods %}
+void U{{ pluginName }}Client::{{ method.name | pascalCase }}(const F{{ method.name | pascalCase }}RequestArgs& RequestArgs, const F{{ method.name | pascalCase }}Callback& OnResponse)
+{
+	FString MethodName = FString("{{ method.name | camelCase }}");
+	JsonRpcClient->SendRequest(MethodName, FJsonObjectConverter::UStructToJsonObject(RequestArgs), [OnResponse](const TSharedPtr<FJsonObject>& ResultObj)
+    {
+        if (ResultObj.IsValid())
+        {
+            F{{ method.name | pascalCase }}ResponseData ResponseData;
+            FJsonObjectConverter::JsonObjectToUStruct(
+                ResultObj.ToSharedRef(), F{{ method.name | pascalCase }}ResponseData::StaticStruct(),
+                &ResponseData, 0, 0);
+            OnResponse.ExecuteIfBound(ResponseData);
+        }
+    });
+}
+{% endfor %}
+
+{% endblock %}

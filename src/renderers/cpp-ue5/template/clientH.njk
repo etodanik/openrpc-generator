@@ -1,0 +1,33 @@
+{% extends "layout.njk" %}
+{% import "macros.njk" as macros %}
+
+{% block main %}
+#pragma once
+
+{{ macros.printIncludes(includeMap) }}
+#include "JsonRpcClient.h"
+#include "{{ pluginName }}Client.generated.h"
+
+UCLASS(Blueprintable, BlueprintType)
+class {{ pluginApi }} U{{ pluginName }}Client : public UObject
+{
+	GENERATED_BODY()
+
+public:
+	U{{ pluginName }}Client();
+	U{{ pluginName }}Client(UJsonRpcClient* InJsonRpcClient);
+
+	UFUNCTION(BlueprintCallable)
+	void InitHttpTransport(FString Url);
+
+    {% for method in methods %}
+    UFUNCTION(BlueprintCallable)
+    void {{ method.name | pascalCase }}(const F{{ method.name | pascalCase }}RequestArgs& RequestArgs, const F{{ method.name | pascalCase }}Callback& OnResponse);
+    {% endfor %}
+
+private:
+	UJsonRpcClient* JsonRpcClient;
+};
+
+
+{% endblock %}

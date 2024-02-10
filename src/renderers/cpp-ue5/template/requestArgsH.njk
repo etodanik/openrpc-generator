@@ -1,0 +1,25 @@
+{% extends "layout.njk" %}
+{% import "macros.njk" as macros %}
+
+{% block main %}
+#pragma once
+
+{{ macros.printIncludes(includeMap) }}
+#include "{{ method.name | pascalCase }}RequestArgs.generated.h"
+
+USTRUCT(BlueprintType)
+struct {{apiTag}} F{{ method.name | pascalCase }}RequestArgs
+{
+	GENERATED_BODY()
+
+	{% for param in method.params %}
+		UPROPERTY(BlueprintReadWrite)
+		{{ param | unrealParamClassAttributeType | safe }} {{ param.name }};
+	{% endfor %}
+
+	F{{ method.name | pascalCase }}RequestArgs() {}
+	F{{ method.name | pascalCase }}RequestArgs(
+		{% for param in method.params %}{{ param | unrealParamMethodArgumentType | safe	 }} {{ param.name }}In{% if loop.last != true %},{% endif %}{% endfor %}
+	) : {% for param in method.params %}{{ param.name }}({{ param.name }}In){% if loop.last != true %},{% endif %}{% endfor %} {}
+};
+{% endblock %}

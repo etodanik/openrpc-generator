@@ -1,0 +1,16 @@
+{
+  "imports": {
+    "std/": "https://deno.land/std@0.214.0/",
+    "@open-rpc/meta-schema": "npm:@open-rpc/meta-schema@1.14.2",
+    "@open-rpc/schema-utils-js": "npm:@open-rpc/schema-utils-js@1.16.1",
+    "@json-schema-tools/reference-resolver": "npm:@json-schema-tools/reference-resolver@1.2.4",
+    "nunjucks": "npm:nunjucks@3.2.4",
+    "change-case": "npm:change-case@5.4.2"
+  },
+  "tasks": {
+    "clang-format-headers": "deno run --allow-all npm:clang-format -i generated/cpp-ue5/**/*.h",
+    "clang-format-source": "deno run --allow-all npm:clang-format -i generated/cpp-ue5/**/*.cpp",
+    "clang-format": "deno task clang-format-headers && deno task clang-format-source",
+    "generate": "deno run --allow-all src/mod.ts &&  deno task clang-format"
+  }
+}

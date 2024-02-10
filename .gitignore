@@ -1,0 +1,5 @@
+.vscode
+.idea
+.deno_lsp
+.DS_Store
+generated/
