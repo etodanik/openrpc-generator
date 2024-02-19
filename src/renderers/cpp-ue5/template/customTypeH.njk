@@ -1,0 +1,25 @@
+{% extends "layout.njk" %}
+{% import "macros.njk" as macros %}
+
+{% block main %}
+#pragma once
+
+{{ macros.printIncludes(includeMap) }}
+#include "{{ method.name | pascalCase }}{{ param.name | pascalCase }}Param.generated.h"
+
+USTRUCT(BlueprintType)
+struct {{apiTag}} F{{ method.name | pascalCase }}{{ param.name | pascalCase }}Param
+{
+	GENERATED_BODY()
+
+	{% for property, propertySchema in param.schema.properties %}
+		UPROPERTY(BlueprintReadWrite)
+		{{ method | unrealPropClassAttributeType(param, property, propertySchema) | safe }} {{ property | pascalCase }};
+	{% endfor %}
+
+	F{{ method.name | pascalCase }}{{ param.name | pascalCase }}Param() {}
+	F{{ method.name | pascalCase }}{{ param.name | pascalCase }}Param(
+		{% for property, propertySchema in param.schema.properties %}{{ method | unrealPropMethodArgumentType(param, property, propertySchema) | safe }} {{ property | pascalCase }}In{% if loop.last != true %},{% endif %}{% endfor %}
+	) : {% for property, propertySchema in param.schema.properties %}{{ property | pascalCase }}({{ property | pascalCase }}In){% if loop.last != true %},{% endif %}{% endfor %} {}
+};
+{% endblock %}

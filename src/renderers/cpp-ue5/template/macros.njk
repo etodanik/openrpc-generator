@@ -1,9 +1,4 @@
 {% macro printIncludes(includeMap) %}
-  {% for path, type in includeMap %}
-    {% if type === 'system' %}
-      #include <{{ path }}>
-    {% else %}
-      #include "{{ path }}"
-    {% endif %}
-  {% endfor %}
+{% for path, type in includeMap %}
+{% if type === 'system' %}#include <{{ path }}>{% else %}#include "{{ path }}"{% endif %}{% endfor %}
 {% endmacro %}

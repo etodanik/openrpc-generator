@@ -12,6 +12,7 @@ export type {
   ContentDescriptorOrReference,
   ExternalDocumentationObject,
   InfoObject,
+  JSONSchemaObject,
   MethodObject,
   Methods,
   Openrpc,
@@ -36,3 +37,4 @@ export type ImportMap = Map<
   string,
   { defaultImports: Set<string>; namedImports: Set<string> }
 >;
+export type CustomTypeMap = Map<string, string>;

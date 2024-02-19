@@ -1,6 +1,6 @@
 import { resolve } from "std/path/mod.ts";
 import { copySync } from "std/fs/copy.ts";
-import schemaJson from "../examples/petstore-openrpc.json" with {
+import schemaJson from "../examples/helius-openrpc.json" with {
   type: "json",
 };
 import { Schema } from "./Schema.ts";
@@ -16,7 +16,15 @@ const staticPath = resolve(
   "static",
   "Resources",
 );
-await Deno.remove(renderPath, { recursive: true });
+
+try {
+  await Deno.remove(renderPath, { recursive: true });
+} catch (error) {
+  if (!(error instanceof Deno.errors.NotFound)) {
+    throw error;
+  }
+}
+
 const schema = new Schema(schemaJson, { renderPath });
 await schema.initialize();
 schema.accept(new UnrealOpenRPCVisitor({ templatePath }));

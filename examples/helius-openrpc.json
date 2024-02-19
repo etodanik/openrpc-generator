@@ -1,0 +1,203 @@
+{
+  "openrpc": "1.0.0-rc1",
+  "info": {
+    "version": "1.0.0",
+    "title": "Helius",
+    "license": {
+      "name": "MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://nettie-ovrrzw-fast-mainnet.helius-rpc.com"
+    }
+  ],
+  "methods": [
+    {
+      "name": "getLatestBlockhash",
+      "summary": "Returns the latest blockhash",
+      "paramStructure": "by-position",
+      "params": [
+        {
+          "name": "Configuration",
+          "required": false,
+          "schema": {
+            "type": "object",
+            "properties": {
+              "commitment": { "$ref": "#/components/schemas/Commitment" },
+              "minContextSlot": {
+                "$ref": "#/components/schemas/MinContextSlot"
+              }
+            }
+          }
+        }
+      ],
+      "result": {
+        "$ref": "#/components/contentDescriptors/GetLatestBlockhashResult"
+      }
+    },
+    {
+      "name": "getMinimumBalanceForRentExemption",
+      "summary": "Returns minimum balance required to make account rent exempt",
+      "paramStructure": "by-position",
+      "params": [
+        {
+          "name": "length",
+          "summary": "The Account's data length",
+          "required": true,
+          "schema": {
+            "type": "integer"
+          }
+        }
+      ],
+      "result": {
+        "$ref": "#/components/contentDescriptors/GetMinimumBalanceForRentExemptionResult"
+      }
+    },
+    {
+      "name": "sendTransaction",
+      "summary": "Submits a signed transaction to the cluster for processing",
+      "paramStructure": "by-position",
+      "params": [
+        {
+          "name": "encodedTransaction",
+          "summary": "Fully-signed Transaction, as encoded string",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        },
+        {
+          "name": "Configuration",
+          "required": false,
+          "schema": {
+            "type": "object",
+            "properties": {
+              "encoding": { "$ref": "#/components/schemas/Encoding" },
+              "skipPreflight": { "$ref": "#/components/schemas/SkipPreflight" },
+              "preflightCommitment": {
+                "$ref": "#/components/schemas/SkipPreflight"
+              },
+              "maxRetries": { "$ref": "#/components/schemas/MaxRetries" },
+              "minContextSlot": {
+                "$ref": "#/components/schemas/MinContextSlot"
+              }
+            }
+          }
+        }
+      ],
+      "result": {
+        "$ref": "#/components/contentDescriptors/SendTransactionResult"
+      }
+    }
+  ],
+  "components": {
+    "contentDescriptors": {
+      "Commitment": {
+        "name": "commitment",
+        "schema": {
+          "$ref": "#/components/schemas/Commitment"
+        }
+      },
+      "Blockhash": {
+        "name": "blockhash",
+        "schema": {
+          "$ref": "#/components/schemas/Blockhash"
+        }
+      },
+      "MinContextSlot": {
+        "name": "minContextSlot",
+        "schema": {
+          "$ref": "#/components/schemas/MinContextSlot"
+        }
+      },
+      "MaxRetries": {
+        "name": "maxRetries",
+        "schema": {
+          "$ref": "#/components/schemas/MaxRetries"
+        }
+      },
+      "PreflightCommitment": {
+        "name": "preflightCommitment",
+        "schema": {
+          "$ref": "#/components/schemas/Commitment"
+        }
+      },
+      "SkipPreflight": {
+        "name": "skipPreflight",
+        "schema": {
+          "$ref": "#/components/schemas/SkipPreflight"
+        }
+      },
+      "Encoding": {
+        "name": "encoding",
+        "schema": {
+          "$ref": "#/components/schemas/Encoding"
+        }
+      },
+      "GetLatestBlockhashResult": {
+        "name": "GetLatestBlockhashResult",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "context": {
+              "type": "object",
+              "properties": {
+                "slot": {
+                  "type": "integer"
+                }
+              }
+            },
+            "value": {
+              "type": "object",
+              "properties": {
+                "blockhash": {
+                  "$ref": "#/components/schemas/Blockhash"
+                },
+                "lastValidBlockHeight": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      },
+      "GetMinimumBalanceForRentExemptionResult": {
+        "name": "GetMinimumBalanceForRentExemptionResult",
+        "summary": "Minimum lamports required in the Account to remain rent free",
+        "schema": {
+          "type": "integer"
+        }
+      },
+      "SendTransactionResult": {
+        "name": "SendTransactionResult",
+        "summary": "First Transaction Signature embedded in the transaction, as base-58 encoded string",
+        "schema": {
+          "type": "string"
+        }
+      }
+    },
+    "schemas": {
+      "Commitment": {
+        "type": "string",
+        "enum": ["processed", "confirmed", "finalized"]
+      },
+      "Blockhash": {
+        "type": "string"
+      },
+      "MinContextSlot": {
+        "type": "number"
+      },
+      "MaxRetries": {
+        "type": "number"
+      },
+      "SkipPreflight": {
+        "type": "boolean"
+      },
+      "Encoding": {
+        "type": "string",
+        "enum": ["base64", "base58"]
+      }
+    }
+  }
+}
