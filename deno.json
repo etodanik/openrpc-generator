@@ -8,9 +8,13 @@
     "change-case": "npm:change-case@5.4.2"
   },
   "tasks": {
-    "clang-format-headers": "deno run --allow-all npm:clang-format -i generated/cpp-ue5/**/*.h",
-    "clang-format-source": "deno run --allow-all npm:clang-format -i generated/cpp-ue5/**/*.cpp",
+    "clang-format-headers": "deno run --allow-all npm:clang-format -i generated/HeliusRpc/**/*.h",
+    "clang-format-source": "deno run --allow-all npm:clang-format -i generated/HeliusRpc/**/*.cpp",
     "clang-format": "deno task clang-format-headers && deno task clang-format-source",
-    "generate": "deno run --allow-all src/mod.ts &&  deno task clang-format"
+    "generate": "deno run --allow-all src/mod.ts &&  deno task clang-format",
+    "test-integration": "deno task generate && deno run --allow-all scripts/ue-build.ts"
+  },
+  "fmt": {
+    "lineWidth": 140
   }
 }

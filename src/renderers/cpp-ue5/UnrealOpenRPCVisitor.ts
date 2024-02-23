@@ -1,17 +1,7 @@
 import * as changeCase from "change-case";
-import {
-  NunjucksOpenRPCVisitor,
-  NunjucksOpenRPCVisitorOptions,
-} from "../../NunjucksOpenRPCVisitor.ts";
+import { NunjucksOpenRPCVisitor, NunjucksOpenRPCVisitorOptions } from "../../NunjucksOpenRPCVisitor.ts";
 import { RenderMap } from "../../RenderMap.ts";
-import {
-  ContentDescriptorObject,
-  CustomTypeMap,
-  IncludeMap,
-  InfoObject,
-  JSONSchemaObject,
-  MethodObject,
-} from "../../types.ts";
+import { ContentDescriptorObject, CustomTypeMap, IncludeMap, InfoObject, JSONSchemaObject, MethodObject } from "../../types.ts";
 
 interface UnrealOpenRPCVisitorOptions extends NunjucksOpenRPCVisitorOptions {}
 
@@ -22,49 +12,26 @@ export class UnrealOpenRPCVisitor extends NunjucksOpenRPCVisitor {
   #pluginName?: string;
   #pluginTitle?: string;
   #pluginVersion?: string;
-  #customTypes: CustomTypeMap = new Map();
 
   constructor(options: UnrealOpenRPCVisitorOptions) {
     super(options);
     this.nunjucksEnv.addFilter(
       "unrealParamClassAttributeType",
-      (method: MethodObject, param: ContentDescriptorObject) =>
-        this.#getUnrealClassAttributeTypeForParam(method, param),
+      (method: MethodObject, param: ContentDescriptorObject) => this.#getUnrealClassAttributeTypeForParam(method, param),
     );
     this.nunjucksEnv.addFilter(
       "unrealParamMethodArgumentType",
-      (method: MethodObject, param: ContentDescriptorObject) =>
-        this.#getUnrealMethodArgumentTypeForParam(method, param),
+      (method: MethodObject, param: ContentDescriptorObject) => this.#getUnrealMethodArgumentTypeForParam(method, param),
     );
     this.nunjucksEnv.addFilter(
       "unrealPropClassAttributeType",
-      (
-        method: MethodObject,
-        param: ContentDescriptorObject,
-        propName: string,
-        propSchema: JSONSchemaObject,
-      ) =>
-        this.#getUnrealClassAttributeTypeForProp(
-          method,
-          param,
-          propName,
-          propSchema,
-        ),
+      (method: MethodObject, param: ContentDescriptorObject, propName: string, propSchema: JSONSchemaObject) =>
+        this.#getUnrealClassAttributeTypeForProp(method, param, propName, propSchema),
     );
     this.nunjucksEnv.addFilter(
       "unrealPropMethodArgumentType",
-      (
-        method: MethodObject,
-        param: ContentDescriptorObject,
-        propName: string,
-        propSchema: JSONSchemaObject,
-      ) =>
-        this.#getUnrealMethodArgumentTypeForProp(
-          method,
-          param,
-          propName,
-          propSchema,
-        ),
+      (method: MethodObject, param: ContentDescriptorObject, propName: string, propSchema: JSONSchemaObject) =>
+        this.#getUnrealMethodArgumentTypeForProp(method, param, propName, propSchema),
     );
   }
 
@@ -76,32 +43,18 @@ export class UnrealOpenRPCVisitor extends NunjucksOpenRPCVisitor {
 
     const infoRenderMap = new RenderMap();
 
-    infoRenderMap.add(
-      `${this.#pluginName}.uplugin`,
-      this.render("plugin.njk", {
-        ...this.getCommonContext(),
-      }),
-    );
+    infoRenderMap.add(`${this.#pluginName}.uplugin`, this.render("plugin.njk", { ...this.getCommonContext() }));
 
-    infoRenderMap.add(
-      `Source/${this.#pluginName}/${this.#pluginName}.Build.cs`,
-      this.render("build.njk", {
-        ...this.getCommonContext(),
-      }),
-    );
+    infoRenderMap.add(`Source/${this.#pluginName}/${this.#pluginName}.Build.cs`, this.render("build.njk", { ...this.getCommonContext() }));
 
     infoRenderMap.add(
       `Source/${this.#pluginName}/Private/${this.#pluginName}.cpp`,
-      this.render("moduleCpp.njk", {
-        ...this.getCommonContext(),
-      }),
+      this.render("moduleCpp.njk", { ...this.getCommonContext() }),
     );
 
     infoRenderMap.add(
       `Source/${this.#pluginName}/Public/${this.#pluginName}.h`,
-      this.render("moduleH.njk", {
-        ...this.getCommonContext(),
-      }),
+      this.render("moduleH.njk", { ...this.getCommonContext() }),
     );
 
     return infoRenderMap;
@@ -112,20 +65,15 @@ export class UnrealOpenRPCVisitor extends NunjucksOpenRPCVisitor {
     const methodsRenderMap = new RenderMap();
 
     for (const method of methods) {
-      includeMap.set(
-        `${changeCase.pascalCase(method.name)}RequestArgs.h`,
-        "local",
-      );
-      includeMap.set(
-        `${changeCase.pascalCase(method.name)}ResponseData.h`,
-        "local",
-      );
+      includeMap.set(`${changeCase.pascalCase(method.name)}RequestArgs.h`, "local");
+      includeMap.set(`${changeCase.pascalCase(method.name)}ResponseData.h`, "local");
     }
 
     methodsRenderMap.add(
       `Source/${this.#pluginName}/Public/${this.#pluginName}Client.h`,
       this.render("clientH.njk", {
         ...this.getCommonContext(),
+        includeMap,
         methods,
       }),
     );
@@ -143,19 +91,9 @@ export class UnrealOpenRPCVisitor extends NunjucksOpenRPCVisitor {
   visitMethod(method: MethodObject) {
     const methodRenderMap = new RenderMap();
     const path = `Source/${this.#pluginName}/Public`;
-    const context = {
-      ...this.getCommonContext(),
-      includeMap: this.#includeMap,
-      method,
-    };
-    methodRenderMap.add(
-      `${path}/${changeCase.pascalCase(method.name)}RequestArgs.h`,
-      this.render("requestArgsH.njk", context),
-    );
-    methodRenderMap.add(
-      `${path}/${changeCase.pascalCase(method.name)}ResponseData.h`,
-      this.render("responseDataH.njk", context),
-    );
+    const context = { ...this.getCommonContext(), includeMap: this.#includeMap, method };
+    methodRenderMap.add(`${path}/${changeCase.pascalCase(method.name)}RequestArgs.h`, this.render("requestArgsH.njk", context));
+    methodRenderMap.add(`${path}/${changeCase.pascalCase(method.name)}ResponseData.h`, this.render("responseDataH.njk", context));
     this.#includeMap.clear();
     return methodRenderMap;
   }
@@ -169,10 +107,7 @@ export class UnrealOpenRPCVisitor extends NunjucksOpenRPCVisitor {
       ),
     ]);
 
-    return this.#createTypeForParamIfNeeded(
-      method,
-      param,
-    );
+    return this.#createTypeForParamIfNeeded(method, param);
   }
 
   getCommonContext() {
@@ -220,12 +155,7 @@ export class UnrealOpenRPCVisitor extends NunjucksOpenRPCVisitor {
           }
         }
 
-        const context = {
-          ...this.getCommonContext(),
-          includeMap: customTypeIncludeMap,
-          method,
-          param,
-        };
+        const context = { ...this.getCommonContext(), includeMap: customTypeIncludeMap, method, param };
 
         return customTypeRenderMap.add(
           `${path}/${this.#getMethodObjectParamFileName(method, param)}`,
@@ -474,17 +404,13 @@ export class UnrealOpenRPCVisitor extends NunjucksOpenRPCVisitor {
     method: MethodObject,
     param: ContentDescriptorObject,
   ) {
-    return `F${changeCase.pascalCase(method.name)}${
-      changeCase.pascalCase(param.name)
-    }Param`;
+    return `F${changeCase.pascalCase(method.name)}${changeCase.pascalCase(param.name)}Param`;
   }
 
   #getMethodObjectParamFileName(
     method: MethodObject,
     param: ContentDescriptorObject,
   ) {
-    return `${changeCase.pascalCase(method.name)}${
-      changeCase.pascalCase(param.name)
-    }Param.h`;
+    return `${changeCase.pascalCase(method.name)}${changeCase.pascalCase(param.name)}Param.h`;
   }
 }

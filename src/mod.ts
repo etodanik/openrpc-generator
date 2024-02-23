@@ -7,15 +7,9 @@ import { Schema } from "./Schema.ts";
 import { UnrealOpenRPCVisitor } from "./renderers/cpp-ue5/UnrealOpenRPCVisitor.ts";
 
 const dirname = import.meta.dirname || ".";
-const renderPath = resolve(dirname, "..", "generated", "cpp-ue5");
+const renderPath = resolve(dirname, "..", "generated", "HeliusRpc");
 const templatePath = resolve(dirname, "renderers", "cpp-ue5", "template");
-const staticPath = resolve(
-  dirname,
-  "renderers",
-  "cpp-ue5",
-  "static",
-  "Resources",
-);
+const staticPath = resolve(dirname, "renderers", "cpp-ue5", "static", "Resources");
 
 try {
   await Deno.remove(renderPath, { recursive: true });

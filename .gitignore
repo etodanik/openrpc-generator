@@ -3,3 +3,10 @@
 .deno_lsp
 .DS_Store
 generated/
+Intermediate/
+Binaries/
+Saved/
+*.sln
+*.xcworkspace
+.env
+.env.*

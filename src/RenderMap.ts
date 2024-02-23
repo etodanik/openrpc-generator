@@ -52,9 +52,7 @@ export class RenderMap {
 
   contains(key: string, value: string | RegExp): boolean {
     const content = this.get(key);
-    return typeof value === "string"
-      ? content.includes(value)
-      : value.test(content);
+    return typeof value === "string" ? content.includes(value) : value.test(content);
   }
 
   write(path: string): void {

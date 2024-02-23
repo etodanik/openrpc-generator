@@ -1,8 +1,4 @@
-import {
-  ContentDescriptorObject,
-  MethodObject,
-  ReferenceObject,
-} from "@open-rpc/meta-schema";
+import { ContentDescriptorObject, MethodObject, ReferenceObject } from "@open-rpc/meta-schema";
 
 export type Voidable<T> = T | void;
 
@@ -33,8 +29,5 @@ export function isReferenceObject(
 
 export type IncludeType = "local" | "system";
 export type IncludeMap = Map<string, IncludeType>;
-export type ImportMap = Map<
-  string,
-  { defaultImports: Set<string>; namedImports: Set<string> }
->;
+export type ImportMap = Map<string, { defaultImports: Set<string>; namedImports: Set<string> }>;
 export type CustomTypeMap = Map<string, string>;

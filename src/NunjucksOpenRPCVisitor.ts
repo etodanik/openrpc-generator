@@ -15,30 +15,12 @@ export class NunjucksOpenRPCVisitor extends OpenRPCVisitor {
     super();
     this.#templatePath = options.templatePath;
     this.nunjucksEnv = nunjucks.configure(this.#templatePath);
-    this.nunjucksEnv.addFilter(
-      "pascalCase",
-      (name) => changeCase.pascalCase(name),
-    );
-    this.nunjucksEnv.addFilter(
-      "capitalCase",
-      (name) => changeCase.capitalCase(name),
-    );
-    this.nunjucksEnv.addFilter(
-      "constantCase",
-      (name) => changeCase.constantCase(name),
-    );
-    this.nunjucksEnv.addFilter(
-      "kebabCase",
-      (name) => changeCase.kebabCase(name),
-    );
-    this.nunjucksEnv.addFilter(
-      "snakeCase",
-      (name) => changeCase.snakeCase(name),
-    );
-    this.nunjucksEnv.addFilter(
-      "camelCase",
-      (name) => changeCase.camelCase(name),
-    );
+    this.nunjucksEnv.addFilter("pascalCase", (name) => changeCase.pascalCase(name));
+    this.nunjucksEnv.addFilter("capitalCase", (name) => changeCase.capitalCase(name));
+    this.nunjucksEnv.addFilter("constantCase", (name) => changeCase.constantCase(name));
+    this.nunjucksEnv.addFilter("kebabCase", (name) => changeCase.kebabCase(name));
+    this.nunjucksEnv.addFilter("snakeCase", (name) => changeCase.snakeCase(name));
+    this.nunjucksEnv.addFilter("camelCase", (name) => changeCase.camelCase(name));
   }
 
   protected render(template: string, context: object) {

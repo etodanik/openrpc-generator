@@ -14,11 +14,20 @@
 	"IsBetaVersion": false,
 	"IsExperimentalVersion": false,
 	"Installed": false,
+	"Dependencies": [
+		"JsonRpc"
+	],
 	"Modules": [
 		{
 			"Name": "{{pluginName}}",
 			"Type": "Runtime",
 			"LoadingPhase": "PreLoadingScreen"
+		}
+	],
+	"Plugins": [
+		{
+			"Name": "JsonRpc",
+			"Enabled": true
 		}
 	]
 }
