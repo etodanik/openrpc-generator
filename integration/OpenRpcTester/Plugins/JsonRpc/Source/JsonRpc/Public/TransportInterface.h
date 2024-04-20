@@ -4,13 +4,13 @@
 #include "UObject/Interface.h"
 #include "TransportInterface.generated.h"
 
-UINTERFACE(MinimalAPI)
+UINTERFACE()
 class JSONRPC_API UTransportInterface : public UInterface
 {
 	GENERATED_BODY()
 };
 
-class ITransportInterface
+class JSONRPC_API ITransportInterface
 {
 	GENERATED_BODY()
 
