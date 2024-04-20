@@ -1,9 +1,9 @@
 {
   "imports": {
-    "std/": "https://deno.land/std@0.214.0/",
-    "@open-rpc/meta-schema": "npm:@open-rpc/meta-schema@1.14.2",
-    "@open-rpc/schema-utils-js": "npm:@open-rpc/schema-utils-js@1.16.1",
-    "@json-schema-tools/reference-resolver": "npm:@json-schema-tools/reference-resolver@1.2.4",
+    "std/": "https://deno.land/std@0.223.0/",
+    "@open-rpc/meta-schema": "npm:@open-rpc/meta-schema@1.14.6",
+    "@open-rpc/schema-utils-js": "npm:@open-rpc/schema-utils-js@1.16.2",
+    "@json-schema-tools/reference-resolver": "npm:@json-schema-tools/reference-resolver@1.2.5",
     "nunjucks": "npm:nunjucks@3.2.4",
     "change-case": "npm:change-case@5.4.2"
   },

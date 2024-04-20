@@ -19,7 +19,15 @@ try {
   }
 }
 
-const schema = new Schema(schemaJson, { renderPath });
-await schema.initialize();
-schema.accept(new UnrealOpenRPCVisitor({ templatePath }));
-copySync(staticPath, resolve(renderPath, "Resources"));
+try {
+  const schema = new Schema(schemaJson, { renderPath });
+  await schema.initialize();
+  schema.accept(new UnrealOpenRPCVisitor({ templatePath }));
+  copySync(staticPath, resolve(renderPath, "Resources"));
+} catch (error) {
+  if (error.stack) {
+    console.error(error.stack);
+  } else {
+    console.error(error.message);
+  }
+}

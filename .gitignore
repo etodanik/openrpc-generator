@@ -11,4 +11,4 @@ Saved/
 .env
 .env.*
 !.env.example
-integration/
+integration/OpenRpcTester/Plugins/HeliusRpc

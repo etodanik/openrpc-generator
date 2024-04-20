@@ -5,21 +5,21 @@
 #pragma once
 
 {{ macros.printIncludes(includeMap) }}
-#include "{{ method.name | pascalCase }}{{ param.name | pascalCase }}Param.generated.h"
+#include "{{ prefixedPropertyName }}.generated.h"
 
 USTRUCT(BlueprintType)
-struct {{apiTag}} F{{ method.name | pascalCase }}{{ param.name | pascalCase }}Param
+struct {{apiTag}} F{{ prefixedPropertyName }}
 {
 	GENERATED_BODY()
 
-	{% for property, propertySchema in param.schema.properties %}
+	{% for childPropertyName, childPropertySchema in propertySchema.properties %}
 		UPROPERTY(BlueprintReadWrite)
-		{{ method | unrealPropClassAttributeType(param, property, propertySchema) | safe }} {{ property | pascalCase }};
+		{{ [prefixedPropertyName] | unrealPropertyClassAttributeType(childPropertyName, childPropertySchema) | safe }} {{ [prefixedPropertyName] | getPrefixedPropertyName(childPropertyName) }};
 	{% endfor %}
 
-	F{{ method.name | pascalCase }}{{ param.name | pascalCase }}Param() {}
-	F{{ method.name | pascalCase }}{{ param.name | pascalCase }}Param(
-		{% for property, propertySchema in param.schema.properties %}{{ method | unrealPropMethodArgumentType(param, property, propertySchema) | safe }} {{ property | pascalCase }}In{% if loop.last != true %},{% endif %}{% endfor %}
-	) : {% for property, propertySchema in param.schema.properties %}{{ property | pascalCase }}({{ property | pascalCase }}In){% if loop.last != true %},{% endif %}{% endfor %} {}
+	F{{ prefixedPropertyName }}() {}
+	F{{ prefixedPropertyName }}(
+		{% for childPropertyName, childPropertySchema in propertySchema.properties %}{{ [prefixedPropertyName] | unrealPropertyMethodArgumentType(childPropertyName, childPropertySchema) | safe }} {{ [prefixedPropertyName] | getPrefixedPropertyName(childPropertyName) }}In{% if loop.last != true %},{% endif %}{% endfor %}
+	) : {% for childPropertyName, childPropertySchema in propertySchema.properties %}{{ [prefixedPropertyName] | getPrefixedPropertyName(childPropertyName) }}({{ [prefixedPropertyName] | getPrefixedPropertyName(childPropertyName) }}In){% if loop.last != true %},{% endif %}{% endfor %} {}
 };
 {% endblock %}

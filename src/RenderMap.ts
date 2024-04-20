@@ -21,11 +21,13 @@ export class RenderMap {
     return this;
   }
 
-  mergeWith(...others: RenderMap[]): RenderMap {
+  mergeWith(...others: (RenderMap | undefined)[]): RenderMap {
     others.forEach((other) => {
-      other._map.forEach((code, relativePath) => {
-        this.add(relativePath, code);
-      });
+      if (other) {
+        other._map.forEach((code, relativePath) => {
+          this.add(relativePath, code);
+        });
+      }
     });
     return this;
   }

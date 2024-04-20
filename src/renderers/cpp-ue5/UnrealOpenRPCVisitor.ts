@@ -15,22 +15,26 @@ export class UnrealOpenRPCVisitor extends NunjucksOpenRPCVisitor {
   constructor(options: UnrealOpenRPCVisitorOptions) {
     super(options);
     this.nunjucksEnv.addFilter(
-      "unrealParamClassAttributeType",
+      "unrealParameterClassAttributeType",
       (method: MethodObject, param: ContentDescriptorObject) => this.#getUnrealClassAttributeTypeForParam(method, param),
     );
     this.nunjucksEnv.addFilter(
-      "unrealParamMethodArgumentType",
+      "unrealParameterMethodArgumentType",
       (method: MethodObject, param: ContentDescriptorObject) => this.#getUnrealMethodArgumentTypeForParam(method, param),
     );
     this.nunjucksEnv.addFilter(
-      "unrealPropClassAttributeType",
-      (method: MethodObject, param: ContentDescriptorObject, propName: string, propSchema: JSONSchemaObject) =>
-        this.#getUnrealClassAttributeTypeForProp(method, param, propName, propSchema),
+      "unrealPropertyClassAttributeType",
+      (propertyParents: string[], propertyName: string, propertySchema: JSONSchemaObject) =>
+        this.#getUnrealClassAttributeTypeForProperty(propertyParents, propertyName, propertySchema),
     );
     this.nunjucksEnv.addFilter(
-      "unrealPropMethodArgumentType",
-      (method: MethodObject, param: ContentDescriptorObject, propName: string, propSchema: JSONSchemaObject) =>
-        this.#getUnrealMethodArgumentTypeForProp(method, param, propName, propSchema),
+      "unrealPropertyMethodArgumentType",
+      (propertyParents: string[], propertyName: string, propertySchema: JSONSchemaObject) =>
+        this.#getUnrealMethodArgumentTypeForProperty(propertyParents, propertyName, propertySchema),
+    );
+    this.nunjucksEnv.addFilter(
+      "getPrefixedPropertyName",
+      (propertyParents: string[], propertyName: string) => this.#getPrefixedPropertyName(propertyParents, propertyName),
     );
   }
 
@@ -118,52 +122,77 @@ export class UnrealOpenRPCVisitor extends NunjucksOpenRPCVisitor {
     };
   }
 
-  #createTypeForParamIfNeeded(
-    method: MethodObject,
-    param: ContentDescriptorObject,
+  #getPrefixedPropertyName(path: string[], propertyName: string) {
+    return [...path, propertyName].map((element) => changeCase.pascalCase(element)).join("");
+  }
+
+  #createTypeForPropertyertyIfNeeded(
+    propertyParents: string[],
+    propertyName: string,
+    propertySchema: JSONSchemaObject,
   ) {
-    if (typeof param.schema === "boolean") {
+    if (typeof propertySchema === "boolean") {
       throw new Error(
-        `Unsupported boolean schema type in param ${param.name}`,
+        `Unsupported boolean schema type in ${this.#getPrefixedPropertyName(propertyParents, propertyName)}`,
       );
     }
 
-    if (typeof param.schema.type !== "string") {
+    if (typeof propertySchema.type !== "string") {
       throw new Error(
-        `Unsupported non-string schema type in param ${param.name}`,
+        `Unsupported non-string schema type in ${this.#getPrefixedPropertyName(propertyParents, propertyName)}`,
       );
     }
 
     const path = `Source/${this.#pluginName}/Public`;
 
-    switch (param.schema.type) {
+    switch (propertySchema.type) {
       case "object": {
         const customTypeRenderMap = new RenderMap();
-        let customTypeIncludeMap: IncludeMap = new Map();
+        const customTypeIncludeMap: IncludeMap = new Map();
 
-        if (param.schema.properties) {
-          for (const [key, value] of Object.entries(param.schema.properties)) {
-            customTypeIncludeMap = new Map([
-              ...customTypeIncludeMap,
-              ...this.resolveImportFromPropType(
-                param,
-                // at the moment we will treat enums as simple strings
-                value.type ? value.type : value.enum ? "enum" : null,
-              ),
-            ]);
+        if (propertySchema.properties) {
+          for (const [childPropertyName, childPropertySchema] of Object.entries(propertySchema.properties)) {
+            const childRenderMap = this.#createTypeForPropertyertyIfNeeded(
+              [...propertyParents, propertyName],
+              childPropertyName,
+              childPropertySchema,
+            );
+            customTypeRenderMap.mergeWith(childRenderMap);
+            if (childRenderMap) {
+              customTypeIncludeMap.set(
+                `${this.#getObjectPropertyFilename([...propertyParents, propertyName], childPropertyName)}`,
+                "local",
+              );
+            }
           }
         }
 
-        const context = { ...this.getCommonContext(), includeMap: customTypeIncludeMap, method, param };
+        const context = {
+          ...this.getCommonContext(),
+          includeMap: customTypeIncludeMap,
+          propertyParents,
+          propertyName,
+          propertySchema,
+          prefixedPropertyName: this.#getPrefixedPropertyName(propertyParents, propertyName),
+        };
 
-        return customTypeRenderMap.add(
-          `${path}/${this.#getMethodObjectParamFileName(method, param)}`,
+        customTypeRenderMap.add(
+          `${path}/${this.#getObjectPropertyFilename(propertyParents, propertyName)}`,
           this.render("customTypeH.njk", context),
         );
+
+        return customTypeRenderMap;
       }
       default:
         break;
     }
+  }
+
+  #createTypeForParamIfNeeded(
+    method: MethodObject,
+    param: ContentDescriptorObject,
+  ) {
+    return this.#createTypeForPropertyertyIfNeeded([method.name], param.name, param.schema);
   }
 
   #getUnrealMethodArgumentTypeForParam(
@@ -191,7 +220,7 @@ export class UnrealOpenRPCVisitor extends NunjucksOpenRPCVisitor {
       case "boolean":
         return "const bool";
       case "object":
-        return `${this.#getMethodObjectParamType(method, param)}&`;
+        return `${this.#getObjectPropertyType([method.name], param.name)}&`;
         return "const TMap&";
       case "array":
         throw new Error("array not implemented");
@@ -231,7 +260,7 @@ export class UnrealOpenRPCVisitor extends NunjucksOpenRPCVisitor {
       case "boolean":
         return "bool";
       case "object":
-        return this.#getMethodObjectParamType(method, param);
+        return this.#getObjectPropertyType([method.name], param.name);
       case "array":
         throw new Error("array not implemented");
         return "TArray";
@@ -245,29 +274,30 @@ export class UnrealOpenRPCVisitor extends NunjucksOpenRPCVisitor {
     }
   }
 
-  #getUnrealMethodArgumentTypeForProp(
-    method: MethodObject,
-    param: ContentDescriptorObject,
-    propName: string,
-    propSchema: JSONSchemaObject,
+  #getUnrealMethodArgumentTypeForProperty(
+    propertyParents: string[],
+    propertyName: string,
+    propertySchema: JSONSchemaObject,
   ): string {
-    if (typeof param.schema === "boolean") {
+    const prefixedPropertyName = this.#getPrefixedPropertyName(propertyParents, propertyName);
+
+    if (typeof propertySchema === "boolean") {
       throw new Error(
-        `Unsupported boolean schema type in param ${param.name}`,
+        `Unsupported boolean schema type in param ${prefixedPropertyName}`,
       );
     }
 
-    if (typeof param.schema.type !== "string") {
+    if (typeof propertySchema.type !== "string") {
       throw new Error(
-        `Unsupported non-string schema type in param ${param.name}`,
+        `Unsupported non-string schema type in param ${prefixedPropertyName}`,
       );
     }
 
-    if (propSchema.enum) {
+    if (propertySchema.enum) {
       return "const FString&";
     }
 
-    switch (propSchema.type) {
+    switch (propertySchema.type) {
       case "string":
         return "const FString&";
       case "number":
@@ -276,38 +306,39 @@ export class UnrealOpenRPCVisitor extends NunjucksOpenRPCVisitor {
       case "boolean":
         return "const bool";
       case "object":
+        return `const ${this.#getObjectPropertyType(propertyParents, propertyName)}`;
       case "array":
       case "null":
       default:
         throw new Error(
-          `type ${propSchema.type} not implemented for method ${method.name} param ${param.name} prop ${propName}`,
+          `type ${propertySchema.type} not implemented for ${prefixedPropertyName}`,
         );
     }
   }
 
-  #getUnrealClassAttributeTypeForProp(
-    method: MethodObject,
-    param: ContentDescriptorObject,
-    propName: string,
-    propSchema: JSONSchemaObject,
+  #getUnrealClassAttributeTypeForProperty(
+    propertyParents: string[],
+    propertyName: string,
+    propertySchema: JSONSchemaObject,
   ): string {
-    if (typeof param.schema === "boolean") {
+    const prefixedPropertyName = this.#getPrefixedPropertyName(propertyParents, propertyName);
+    if (typeof propertySchema === "boolean") {
       throw new Error(
-        `Unsupported boolean schema type in param ${param.name}`,
+        `Unsupported boolean schema type in param ${prefixedPropertyName}`,
       );
     }
 
-    if (typeof param.schema.type !== "string") {
+    if (typeof propertySchema.type !== "string") {
       throw new Error(
-        `Unsupported non-string schema type in param ${param.name}`,
+        `Unsupported non-string schema type in param ${prefixedPropertyName}`,
       );
     }
 
-    if (propSchema.enum) {
+    if (propertySchema.enum) {
       return "FString";
     }
 
-    switch (propSchema.type) {
+    switch (propertySchema.type) {
       case "string":
         return "FString";
       case "number":
@@ -316,40 +347,14 @@ export class UnrealOpenRPCVisitor extends NunjucksOpenRPCVisitor {
       case "boolean":
         return "bool";
       case "object":
+        return this.#getObjectPropertyType(propertyParents, propertyName);
       case "array":
       case "null":
       default:
         throw new Error(
-          `type ${propSchema.type} not implemented for method ${method.name} param ${param.name} prop ${propName}`,
+          `type ${propertySchema.type} not implemented for ${prefixedPropertyName}`,
         );
     }
-  }
-
-  resolveImportFromPropType(
-    param: ContentDescriptorObject,
-    propType: string,
-  ): IncludeMap {
-    const includeMap: IncludeMap = new Map();
-    switch (propType) {
-      case "string":
-      case "enum":
-        includeMap.set("Containers/UnrealString.h", "local");
-        break;
-      case "number":
-      case "integer":
-      case "boolean":
-        includeMap.set("CoreMinimal.h", "local");
-        break;
-      case "object":
-      case "array":
-      case "null":
-      default:
-        throw new Error(
-          `Unsupported type: ${propType} in param ${param.name}`,
-        );
-    }
-
-    return includeMap;
   }
 
   resolveImportFromParamType(
@@ -381,7 +386,7 @@ export class UnrealOpenRPCVisitor extends NunjucksOpenRPCVisitor {
         break;
       case "object":
         includeMap.set(
-          `${this.#getMethodObjectParamFileName(method, param)}`,
+          `${this.#getObjectPropertyFilename([method.name], param.name)}`,
           "local",
         );
         break;
@@ -399,17 +404,11 @@ export class UnrealOpenRPCVisitor extends NunjucksOpenRPCVisitor {
     return includeMap;
   }
 
-  #getMethodObjectParamType(
-    method: MethodObject,
-    param: ContentDescriptorObject,
-  ) {
-    return `F${changeCase.pascalCase(method.name)}${changeCase.pascalCase(param.name)}Param`;
+  #getObjectPropertyType(propertyParents: string[], propertyName: string) {
+    return `F${this.#getPrefixedPropertyName(propertyParents, propertyName)}`;
   }
 
-  #getMethodObjectParamFileName(
-    method: MethodObject,
-    param: ContentDescriptorObject,
-  ) {
-    return `${changeCase.pascalCase(method.name)}${changeCase.pascalCase(param.name)}Param.h`;
+  #getObjectPropertyFilename(propertyParents: string[], propertyName: string) {
+    return `${this.#getPrefixedPropertyName(propertyParents, propertyName)}.h`;
   }
 }

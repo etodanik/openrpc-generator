@@ -96,7 +96,7 @@
       "paramStructure": "by-position",
       "params": [
         {
-          "$ref": "#/components/schemas/PublicKey"
+          "$ref": "#/components/contentDescriptors/PublicKey"
         },
         {
           "name": "Configuration",
@@ -246,10 +246,10 @@
         "type": "string"
       },
       "MinContextSlot": {
-        "type": "number"
+        "type": "integer"
       },
       "MaxRetries": {
-        "type": "number"
+        "type": "integer"
       },
       "SkipPreflight": {
         "type": "boolean"
