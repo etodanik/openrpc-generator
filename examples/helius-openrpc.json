@@ -89,6 +89,34 @@
       "result": {
         "$ref": "#/components/contentDescriptors/SendTransactionResult"
       }
+    },
+    {
+      "name": "getAccountInfo",
+      "summary": "Returns all information associated with the account of provided Pubkey",
+      "paramStructure": "by-position",
+      "params": [
+        {
+          "$ref": "#/components/schemas/PublicKey"
+        },
+        {
+          "name": "Configuration",
+          "required": false,
+          "schema": {
+            "type": "object",
+            "properties": {
+              "commitment": { "$ref": "#/components/schemas/Commitment" },
+              "encoding": { "$ref": "#/components/schemas/Encoding" },
+              "dataSlice": { "$ref": "#/components/schemas/DataSlice" },
+              "minContextSlot": {
+                "$ref": "#/components/schemas/MinContextSlot"
+              }
+            }
+          }
+        }
+      ],
+      "result": {
+        "$ref": "#/components/contentDescriptors/GetAccountInfoResult"
+      }
     }
   ],
   "components": {
@@ -135,6 +163,24 @@
           "$ref": "#/components/schemas/Encoding"
         }
       },
+      "AccountInfoEncoding": {
+        "name": "encoding",
+        "schema": {
+          "$ref": "#/components/schemas/AccountInfoEncoding"
+        }
+      },
+      "PublicKey": {
+        "name": "publicKey",
+        "schema": {
+          "$ref": "#/components/schemas/PublicKey"
+        }
+      },
+      "DataSlice": {
+        "name": "dataSlice",
+        "schema": {
+          "$ref": "#/components/schemas/DataSlice"
+        }
+      },
       "GetLatestBlockhashResult": {
         "name": "GetLatestBlockhashResult",
         "schema": {
@@ -175,6 +221,20 @@
         "schema": {
           "type": "string"
         }
+      },
+      "GetAccountInfoResult": {
+        "name": "GetAccountInfoResult",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "lamports": { "type": "integer" },
+            "owner": { "$ref": "#/components/schemas/PublicKey" },
+            "data": { "$ref": "#/components/schemas/AccountData" },
+            "executable": { "type": "boolean" },
+            "rentEpoch": { "type": "integer" },
+            "size": { "type": "integer" }
+          }
+        }
       }
     },
     "schemas": {
@@ -197,6 +257,27 @@
       "Encoding": {
         "type": "string",
         "enum": ["base64", "base58"]
+      },
+      "AccountInfoEncoding": {
+        "type": "string",
+        "enum": ["base64", "base58", "base64+zstd", "jsonParsed"]
+      },
+      "AccountData": {
+        "type": "string"
+      },
+      "PublicKey": {
+        "type": "string"
+      },
+      "DataSlice": {
+        "type": "object",
+        "properties": {
+          "length": {
+            "type": "integer"
+          },
+          "offset": {
+            "type": "integer"
+          }
+        }
       }
     }
   }

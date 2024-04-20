@@ -7,7 +7,6 @@ interface UnrealOpenRPCVisitorOptions extends NunjucksOpenRPCVisitorOptions {}
 
 export class UnrealOpenRPCVisitor extends NunjucksOpenRPCVisitor {
   #includeMap: IncludeMap = new Map();
-  #customTypeIncludeMap: IncludeMap = new Map();
   #apiTag?: string;
   #pluginName?: string;
   #pluginTitle?: string;
