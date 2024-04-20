@@ -15,14 +15,24 @@ function getUnrealPlatform(denoPlatform: string) {
   }
 }
 
+function getBuildScript(denoPlatform: string) {
+  switch (denoPlatform) {
+    case "windows":
+      return "Build.bat";
+      default:
+      return "Build.sh";
+  }
+}
+
 const unrealEngineRoot = Deno.env.get("UNREAL_ENGINE_ROOT");
 if (!unrealEngineRoot) {
   console.log("UNREAL_ENGINE_ROOT not found in environment variables.");
   Deno.exit(1);
 }
+
 const dirname = import.meta.dirname || ".";
-const buildScript = "Build.sh";
-const buildCommand = resolve(unrealEngineRoot, "Engine", "Build", "BatchFiles", "Mac", buildScript);
+const buildScript = getBuildScript(Deno.build.os);
+const buildCommand = Deno.build.os === "windows" ?  resolve(unrealEngineRoot, "Engine", "Build", "BatchFiles", buildScript) : resolve(unrealEngineRoot, "Engine", "Build", "BatchFiles", getUnrealPlatform(Deno.build.os), buildScript);
 const generatedPath = resolve(dirname, "..", "generated", "HeliusRpc");
 const pluginPath = resolve(dirname, "..", "integration", "OpenRpcTester", "Plugins", "HeliusRpc");
 const projectPath = resolve(dirname, "..", "integration", "OpenRpcTester", "OpenRpcTester.uproject");

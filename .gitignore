@@ -10,3 +10,5 @@ Saved/
 *.xcworkspace
 .env
 .env.*
+!.env.example
+integration/
