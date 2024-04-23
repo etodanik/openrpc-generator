@@ -195,85 +195,6 @@ export class UnrealOpenRPCVisitor extends NunjucksOpenRPCVisitor {
     return this.#createTypeForPropertyertyIfNeeded([method.name], param.name, param.schema);
   }
 
-  #getUnrealMethodArgumentTypeForParam(
-    method: MethodObject,
-    param: ContentDescriptorObject,
-  ): string {
-    if (typeof param.schema === "boolean") {
-      throw new Error(
-        `Unsupported boolean schema type in param ${param.name}`,
-      );
-    }
-
-    if (typeof param.schema.type !== "string") {
-      throw new Error(
-        `Unsupported non-string schema type in param ${param.name}`,
-      );
-    }
-
-    switch (param.schema.type) {
-      case "string":
-        return "const FString&";
-      case "number":
-      case "integer":
-        return "const int";
-      case "boolean":
-        return "const bool";
-      case "object":
-        return `${this.#getObjectPropertyType([method.name], param.name)}&`;
-        return "const TMap&";
-      case "array":
-        throw new Error("array not implemented");
-        return "const TArray&";
-      case "null":
-        throw new Error("null not implemented");
-        break;
-      default:
-        throw new Error(
-          `Unsupported type: ${param.type} in param ${param.name}`,
-        );
-    }
-  }
-
-  #getUnrealClassAttributeTypeForParam(
-    method: MethodObject,
-    param: ContentDescriptorObject,
-  ): string {
-    if (typeof param.schema === "boolean") {
-      throw new Error(
-        `Unsupported boolean schema type in param ${param.name}`,
-      );
-    }
-
-    if (typeof param.schema.type !== "string") {
-      throw new Error(
-        `Unsupported non-string schema type in param ${param.name}`,
-      );
-    }
-
-    switch (param.schema.type) {
-      case "string":
-        return "FString";
-      case "number":
-      case "integer":
-        return "int";
-      case "boolean":
-        return "bool";
-      case "object":
-        return this.#getObjectPropertyType([method.name], param.name);
-      case "array":
-        throw new Error("array not implemented");
-        return "TArray";
-      case "null":
-        throw new Error("null not implemented");
-        break;
-      default:
-        throw new Error(
-          `Unsupported type: ${param.type} in param ${param.name}`,
-        );
-    }
-  }
-
   #getUnrealMethodArgumentTypeForProperty(
     propertyParents: string[],
     propertyName: string,
@@ -293,20 +214,26 @@ export class UnrealOpenRPCVisitor extends NunjucksOpenRPCVisitor {
       );
     }
 
+    let typeName: string;
+
     if (propertySchema.enum) {
-      return "const FString&";
+      typeName = "FString";
     }
 
     switch (propertySchema.type) {
       case "string":
-        return "const FString&";
+        typeName = "FString";
+        break;
       case "number":
       case "integer":
-        return "const int";
+        typeName = "int";
+        break;
       case "boolean":
-        return "const bool";
+        typeName = "bool";
+        break;
       case "object":
-        return `const ${this.#getObjectPropertyType(propertyParents, propertyName)}`;
+        typeName = `${this.#getObjectPropertyType(propertyParents, propertyName)}`;
+        break;
       case "array":
       case "null":
       default:
@@ -314,6 +241,8 @@ export class UnrealOpenRPCVisitor extends NunjucksOpenRPCVisitor {
           `type ${propertySchema.type} not implemented for ${prefixedPropertyName}`,
         );
     }
+
+    return propertySchema.required ? `const ${typeName}` : `const TOptional<${typeName}>`;
   }
 
   #getUnrealClassAttributeTypeForProperty(
@@ -334,20 +263,26 @@ export class UnrealOpenRPCVisitor extends NunjucksOpenRPCVisitor {
       );
     }
 
+    let typeName: string;
+
     if (propertySchema.enum) {
-      return "FString";
+      typeName = "FString";
     }
 
     switch (propertySchema.type) {
       case "string":
-        return "FString";
+        typeName = "FString";
+        break;
       case "number":
       case "integer":
-        return "int";
+        typeName = "int";
+        break;
       case "boolean":
-        return "bool";
+        typeName = "bool";
+        break;
       case "object":
-        return this.#getObjectPropertyType(propertyParents, propertyName);
+        typeName = this.#getObjectPropertyType(propertyParents, propertyName);
+        break;
       case "array":
       case "null":
       default:
@@ -355,6 +290,22 @@ export class UnrealOpenRPCVisitor extends NunjucksOpenRPCVisitor {
           `type ${propertySchema.type} not implemented for ${prefixedPropertyName}`,
         );
     }
+
+    return propertySchema.required ? typeName : `TOptional<${typeName}>`;
+  }
+
+  #getUnrealMethodArgumentTypeForParam(
+    method: MethodObject,
+    param: ContentDescriptorObject,
+  ): string {
+    return this.#getUnrealMethodArgumentTypeForProperty([method.name], param.name, param.schema);
+  }
+
+  #getUnrealClassAttributeTypeForParam(
+    method: MethodObject,
+    param: ContentDescriptorObject,
+  ): string {
+    return this.#getUnrealClassAttributeTypeForProperty([method.name], param.name, param.schema);
   }
 
   resolveImportFromParamType(

@@ -14,12 +14,12 @@ struct {{apiTag}} F{{ prefixedPropertyName }}
 
 	{% for childPropertyName, childPropertySchema in propertySchema.properties %}
 		UPROPERTY(BlueprintReadWrite)
-		{{ [prefixedPropertyName] | unrealPropertyClassAttributeType(childPropertyName, childPropertySchema) | safe }} {{ [prefixedPropertyName] | getPrefixedPropertyName(childPropertyName) }};
+		{{ [prefixedPropertyName] | unrealPropertyClassAttributeType(childPropertyName, childPropertySchema) | safe }} {{ childPropertyName }};
 	{% endfor %}
 
 	F{{ prefixedPropertyName }}() {}
 	F{{ prefixedPropertyName }}(
-		{% for childPropertyName, childPropertySchema in propertySchema.properties %}{{ [prefixedPropertyName] | unrealPropertyMethodArgumentType(childPropertyName, childPropertySchema) | safe }} {{ [prefixedPropertyName] | getPrefixedPropertyName(childPropertyName) }}In{% if loop.last != true %},{% endif %}{% endfor %}
-	) : {% for childPropertyName, childPropertySchema in propertySchema.properties %}{{ [prefixedPropertyName] | getPrefixedPropertyName(childPropertyName) }}({{ [prefixedPropertyName] | getPrefixedPropertyName(childPropertyName) }}In){% if loop.last != true %},{% endif %}{% endfor %} {}
+		{% for childPropertyName, childPropertySchema in propertySchema.properties %}{{ [prefixedPropertyName] | unrealPropertyMethodArgumentType(childPropertyName, childPropertySchema) | safe }} {{ childPropertyName }}In{% if loop.last != true %},{% endif %}{% endfor %}
+	) : {% for childPropertyName, childPropertySchema in propertySchema.properties %}{{ childPropertyName }}({{ childPropertyName }}In){% if loop.last != true %},{% endif %}{% endfor %} {}
 };
 {% endblock %}
