@@ -13,7 +13,7 @@ struct {{apiTag}} F{{ prefixedPropertyName }}
 	GENERATED_BODY()
 
 	{% for childPropertyName, childPropertySchema in propertySchema.properties %}
-		UPROPERTY(BlueprintReadWrite)
+		UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		{{ [prefixedPropertyName] | unrealPropertyClassAttributeType(childPropertyName, childPropertySchema) | safe }} {{ childPropertyName }};
 	{% endfor %}
 

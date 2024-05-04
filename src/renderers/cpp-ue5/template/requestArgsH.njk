@@ -13,7 +13,7 @@ struct {{apiTag}} F{{ method.name | pascalCase }}RequestArgs
 	GENERATED_BODY()
 
 	{% for param in method.params %}
-		UPROPERTY(BlueprintReadWrite)
+		UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		{{ method | unrealParameterClassAttributeType(param) | safe }} {{ param.name }};
 	{% endfor %}
 

@@ -12,7 +12,7 @@ struct {{apiTag}} F{{ method.name | pascalCase }}ResponseData
 {
 	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int64 value;
 
 	F{{ method.name | pascalCase }}ResponseData() : value(0)
