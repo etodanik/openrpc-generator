@@ -42,7 +42,7 @@ The following are the most popular methods sorted by popularity.
 - [ ] getProgramAccounts
 - [ ] getRecentPrioritizationFees
 - [ ] getBalance
-- [ ] getBlcokheight
+- [ ] getBlockheight
 
 In addition the following are implemented:
 
