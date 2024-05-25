@@ -24,13 +24,13 @@ export class UnrealOpenRPCVisitor extends NunjucksOpenRPCVisitor {
     );
     this.nunjucksEnv.addFilter(
       "unrealPropertyClassAttributeType",
-      (propertyParents: string[], propertyName: string, propertySchema: JSONSchemaObject) =>
-        this.#getUnrealClassAttributeTypeForProperty(propertyParents, propertyName, propertySchema),
+      (propertyParents: string[], propertyName: string, propertySchema: JSONSchemaObject, propertyRequired: boolean = false) =>
+        this.#getUnrealClassAttributeTypeForProperty(propertyParents, propertyName, propertySchema, propertyRequired),
     );
     this.nunjucksEnv.addFilter(
       "unrealPropertyMethodArgumentType",
-      (propertyParents: string[], propertyName: string, propertySchema: JSONSchemaObject) =>
-        this.#getUnrealMethodArgumentTypeForProperty(propertyParents, propertyName, propertySchema),
+      (propertyParents: string[], propertyName: string, propertySchema: JSONSchemaObject, propertyRequired: boolean = false) =>
+        this.#getUnrealMethodArgumentTypeForProperty(propertyParents, propertyName, propertySchema, propertyRequired),
     );
     this.nunjucksEnv.addFilter(
       "getPrefixedPropertyName",
@@ -126,10 +126,11 @@ export class UnrealOpenRPCVisitor extends NunjucksOpenRPCVisitor {
     return [...path, propertyName].map((element) => changeCase.pascalCase(element)).join("");
   }
 
-  #createTypeForPropertyertyIfNeeded(
+  #createTypeForPropertyIfNeeded(
     propertyParents: string[],
     propertyName: string,
     propertySchema: JSONSchemaObject,
+    propertyRequired: boolean = false,
   ) {
     if (typeof propertySchema === "boolean") {
       throw new Error(
@@ -152,10 +153,11 @@ export class UnrealOpenRPCVisitor extends NunjucksOpenRPCVisitor {
 
         if (propertySchema.properties) {
           for (const [childPropertyName, childPropertySchema] of Object.entries(propertySchema.properties)) {
-            const childRenderMap = this.#createTypeForPropertyertyIfNeeded(
+            const childRenderMap = this.#createTypeForPropertyIfNeeded(
               [...propertyParents, propertyName],
               childPropertyName,
               childPropertySchema,
+              propertySchema?.required?.includes(childPropertyName),
             );
             customTypeRenderMap.mergeWith(childRenderMap);
             if (childRenderMap) {
@@ -173,6 +175,7 @@ export class UnrealOpenRPCVisitor extends NunjucksOpenRPCVisitor {
           propertyParents,
           propertyName,
           propertySchema,
+          propertyRequired,
           prefixedPropertyName: this.#getPrefixedPropertyName(propertyParents, propertyName),
         };
 
@@ -192,13 +195,14 @@ export class UnrealOpenRPCVisitor extends NunjucksOpenRPCVisitor {
     method: MethodObject,
     param: ContentDescriptorObject,
   ) {
-    return this.#createTypeForPropertyertyIfNeeded([method.name], param.name, param.schema);
+    return this.#createTypeForPropertyIfNeeded([method.name], param.name, param.schema, param.required);
   }
 
   #getUnrealMethodArgumentTypeForProperty(
     propertyParents: string[],
     propertyName: string,
     propertySchema: JSONSchemaObject,
+    propertyRequired: boolean = false,
   ): string {
     const prefixedPropertyName = this.#getPrefixedPropertyName(propertyParents, propertyName);
 
@@ -242,13 +246,14 @@ export class UnrealOpenRPCVisitor extends NunjucksOpenRPCVisitor {
         );
     }
 
-    return propertySchema.required ? `const ${typeName}` : `const TOptional<${typeName}>`;
+    return propertyRequired ? `const ${typeName}` : `const TOptional<${typeName}>`;
   }
 
   #getUnrealClassAttributeTypeForProperty(
     propertyParents: string[],
     propertyName: string,
     propertySchema: JSONSchemaObject,
+    propertyRequired: boolean = false,
   ): string {
     const prefixedPropertyName = this.#getPrefixedPropertyName(propertyParents, propertyName);
     if (typeof propertySchema === "boolean") {
@@ -291,21 +296,21 @@ export class UnrealOpenRPCVisitor extends NunjucksOpenRPCVisitor {
         );
     }
 
-    return propertySchema.required ? typeName : `TOptional<${typeName}>`;
+    return propertyRequired ? typeName : `TOptional<${typeName}>`;
   }
 
   #getUnrealMethodArgumentTypeForParam(
     method: MethodObject,
     param: ContentDescriptorObject,
   ): string {
-    return this.#getUnrealMethodArgumentTypeForProperty([method.name], param.name, param.schema);
+    return this.#getUnrealMethodArgumentTypeForProperty([method.name], param.name, param.schema, param.required);
   }
 
   #getUnrealClassAttributeTypeForParam(
     method: MethodObject,
     param: ContentDescriptorObject,
   ): string {
-    return this.#getUnrealClassAttributeTypeForProperty([method.name], param.name, param.schema);
+    return this.#getUnrealClassAttributeTypeForProperty([method.name], param.name, param.schema, param.required);
   }
 
   resolveImportFromParamType(

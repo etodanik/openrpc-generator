@@ -96,7 +96,11 @@
       "paramStructure": "by-position",
       "params": [
         {
-          "$ref": "#/components/contentDescriptors/PublicKey"
+          "name": "publicKey",
+          "required": true,
+          "schema": {
+            "$ref": "#/components/schemas/PublicKey"
+          }
         },
         {
           "name": "configuration",
