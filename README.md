@@ -4,9 +4,9 @@ Generates JSON-RPC 2.0 clients from OpenRPC schema files.
 
 ## Cutting Edge
 
-This repository is targeting Unreal Engine 5.4.x and newer as a conscious choice. Unreal 5.4.0 brought support for exposing `TOptional` to
-blueprints which makes life much easier when dealing with RPC endpoints that have tons of optional parameters and return values. If you have
-a real need for supporting older versions of Unreal please open an issue and your use case will be considered.
+This repository is targeting Unreal Engine 5.4.x and newer as a conscious choice. Unreal 5.4.0 brought support for `TOptional` in UHT which
+makes life much easier when dealing with RPC endpoints that have tons of optional parameters and return values. If you have a real need for
+supporting older versions of Unreal please open an issue and your use case will be considered.
 
 ## Current State
 
