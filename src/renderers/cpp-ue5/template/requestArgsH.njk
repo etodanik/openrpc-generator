@@ -13,13 +13,24 @@ struct {{apiTag}} F{{ method.name | pascalCase }}RequestArgs
 	GENERATED_BODY()
 
 	{% for param in method.params %}
-		UPROPERTY(BlueprintReadWrite)
+		UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		{{ method | unrealParameterClassAttributeType(param) | safe }} {{ param.name }};
 	{% endfor %}
 
+	{% set noneRequired = true %}
+	{% for param in method.params %}
+		{% if param.required == true %}
+			{% set noneRequired = false %}
+		{% endif %}
+	{% endfor %}
+
+	{% if not noneRequired %}
+	{# We only need the default constructor if there is at least one non optional field, otherwise the constructor with all optionals also serves as default #}
 	F{{ method.name | pascalCase }}RequestArgs() {}
+	{% endif %}
+
 	F{{ method.name | pascalCase }}RequestArgs(
-		{% for param in method.params %}{{ method | unrealParameterMethodArgumentType(param) | safe	 }} {{ param.name }}In{% if loop.last != true %},{% endif %}{% endfor %}
+		{% for param in method.params %}{{ method | unrealParameterMethodArgumentType(param) | safe	 }} {{ param.name }}In{% if param.required != true %} = {{ method | unrealParameterClassAttributeType(param) | safe	 }}(){% endif %}{% if loop.last != true %},{% endif %}{% endfor %}
 	) : {% for param in method.params %}{{ param.name }}({{ param.name }}In){% if loop.last != true %},{% endif %}{% endfor %} {}
 };
 {% endblock %}

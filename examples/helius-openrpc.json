@@ -19,7 +19,7 @@
       "paramStructure": "by-position",
       "params": [
         {
-          "name": "Configuration",
+          "name": "configuration",
           "required": false,
           "schema": {
             "type": "object",
@@ -68,7 +68,7 @@
           }
         },
         {
-          "name": "Configuration",
+          "name": "configuration",
           "required": false,
           "schema": {
             "type": "object",
@@ -96,16 +96,20 @@
       "paramStructure": "by-position",
       "params": [
         {
-          "$ref": "#/components/contentDescriptors/PublicKey"
+          "name": "publicKey",
+          "required": true,
+          "schema": {
+            "$ref": "#/components/schemas/PublicKey"
+          }
         },
         {
-          "name": "Configuration",
+          "name": "configuration",
           "required": false,
           "schema": {
             "type": "object",
             "properties": {
               "commitment": { "$ref": "#/components/schemas/Commitment" },
-              "encoding": { "$ref": "#/components/schemas/Encoding" },
+              "encoding": { "$ref": "#/components/schemas/AccountInfoEncoding" },
               "dataSlice": { "$ref": "#/components/schemas/DataSlice" },
               "minContextSlot": {
                 "$ref": "#/components/schemas/MinContextSlot"

@@ -20,7 +20,7 @@
 		}, 
 		{
 			"Name": "JsonRpc",
-			"Enabled": true,
+			"Enabled": true
 		}
 	]
 }
