@@ -1,0 +1,29 @@
+{% extends "layout.njk" %}
+{% import "macros.njk" as macros %}
+
+{% block main %}
+#pragma once
+
+{{ macros.printIncludes(includeMap) }}
+#include "{{ method.name | pascalCase }}RequestArgsBlueprintFunctionLibrary.generated.h"
+
+UCLASS()
+class {{apiTag}} U{{ method.name | pascalCase }}RequestArgsBlueprintFunctionLibrary : public UBlueprintFunctionLibrary
+{
+    GENERATED_BODY()
+
+public:
+	{% for param in method.params %}
+		{% if not param.schema.required and not param.required %}
+			UFUNCTION(BlueprintCallable, Category="RPC")
+			static bool IsSet{{ method.name | pascalCase }}RequestArgs{{ param.name | pascalCase }}(UPARAM(ref) const F{{ method.name | pascalCase }}RequestArgs& {{ method.name | pascalCase }}RequestArgs) { return {{ method.name | pascalCase }}RequestArgs.{{ param.name }}.IsSet(); }
+			UFUNCTION(BlueprintCallable, Category="RPC")
+			static {{ [method.name] | unrealPropertyClassAttributeType(param.name, param.schema, true) | safe }} Get{{ method.name | pascalCase }}RequestArgs{{ param.name | pascalCase }}(UPARAM(ref) const F{{ method.name | pascalCase }}RequestArgs& {{ method.name | pascalCase }}RequestArgs) { return {{ method.name | pascalCase }}RequestArgs.{{ param.name }}.GetValue(); }
+			UFUNCTION(BlueprintCallable, Category="RPC")
+			static void Set{{ method.name | pascalCase }}RequestArgs{{ param.name | pascalCase }}(UPARAM(ref) F{{ method.name | pascalCase }}RequestArgs& {{ method.name | pascalCase }}RequestArgs, {{ [method.name] | unrealPropertyMethodArgumentType(param.name, param.schema, true) | safe }} NewValue) { {{ method.name | pascalCase }}RequestArgs.{{ param.name }} = NewValue; }
+			UFUNCTION(BlueprintCallable, Category="RPC")
+			static void Reset{{ method.name | pascalCase }}RequestArgs{{ param.name | pascalCase }}(UPARAM(ref) F{{ method.name | pascalCase }}RequestArgs& {{ method.name | pascalCase }}RequestArgs) { {{ method.name | pascalCase }}RequestArgs.{{ param.name }}.Reset(); }
+		{% endif %}
+	{% endfor %}
+};
+{% endblock %}

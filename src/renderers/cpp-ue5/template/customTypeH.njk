@@ -17,7 +17,6 @@ struct {{apiTag}} F{{ prefixedPropertyName }}
 		{{ [prefixedPropertyName] | unrealPropertyClassAttributeType(childPropertyName, childPropertySchema) | safe }} {{ childPropertyName }};
 	{% endfor %}
 
-
 	{% if propertySchema.required and propertySchema.required.length > 0 %}
 	{# We only need the default constructor if there is at least one non optional field, otherwise the constructor with all optionals also serves as default #}
 	F{{ prefixedPropertyName }}() {}

@@ -2,3 +2,11 @@
 {% for path, type in includeMap %}
 {% if type === 'system' %}#include <{{ path }}>{% else %}#include "{{ path }}"{% endif %}{% endfor %}
 {% endmacro %}
+
+{% macro methodResponseType(method) %}
+{% switch method.result.schema.type %}{% case "object" %}F{{ method.name | pascalCase }}Response{% case "string" %}FString{% case "integer" %}int32{% case "boolean" %}bool{% default %}void{% endswitch %}
+{% endmacro %}
+
+{% macro methodResponseJsonType(method) %}
+{% switch method.result.schema.type %}{% case "object" %}FJsonObject{% case "string" %}FJsonValueString{% case "integer" %}FJsonValueNumber{% case "boolean" %}FJsonValueBoolean{% default %}void{% endswitch %}
+{% endmacro %}

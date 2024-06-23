@@ -27,15 +27,23 @@ void U{{ pluginName }}Client::InitHttpTransport(FString Url)
 void U{{ pluginName }}Client::{{ method.name | pascalCase }}(const F{{ method.name | pascalCase }}RequestArgs& RequestArgs, const F{{ method.name | pascalCase }}Callback& OnResponse)
 {
 	FString MethodName = FString("{{ method.name | camelCase }}");
-	JsonRpcClient->SendRequest(MethodName, FJsonObjectConverter::UStructToJsonObject(RequestArgs), [OnResponse](const TSharedPtr<FJsonObject>& ResultObj)
+	JsonRpcClient->SendRequest(MethodName, RequestArgs, [OnResponse](const TSharedPtr<FJsonValue>& JsonResult)
     {
-        if (ResultObj.IsValid())
+        if (JsonResult.IsValid())
         {
-            F{{ method.name | pascalCase }}ResponseData ResponseData;
-            FJsonObjectConverter::JsonObjectToUStruct(
-                ResultObj.ToSharedRef(), F{{ method.name | pascalCase }}ResponseData::StaticStruct(),
-                &ResponseData, 0, 0);
-            OnResponse.ExecuteIfBound(ResponseData);
+            {{ macros.methodResponseType(method) }} Response;
+            {% switch method.result.schema.type %}
+                {% case "object" %} 
+                FJsonObjectConverter::JsonObjectToUStruct(JsonResult->AsObject().ToSharedRef(), F{{ method.name | pascalCase }}Response::StaticStruct(), &Response, 0, 0);
+                {% case "string" %}
+                    Response = JsonResult->AsString();
+                {% case "integer" %}
+                    Response = JsonResult->AsNumber();
+                {% case "boolean" %}
+                    Response = JsonResult->AsBool();
+                {% default %}
+            {% endswitch %}
+            OnResponse.ExecuteIfBound(Response);
         }
     });
 }

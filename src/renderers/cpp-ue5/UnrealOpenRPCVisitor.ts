@@ -2,6 +2,7 @@ import * as changeCase from "change-case";
 import { NunjucksOpenRPCVisitor, NunjucksOpenRPCVisitorOptions } from "../../NunjucksOpenRPCVisitor.ts";
 import { RenderMap } from "../../RenderMap.ts";
 import { ContentDescriptorObject, CustomTypeMap, IncludeMap, InfoObject, JSONSchemaObject, MethodObject } from "../../types.ts";
+import { ensureContentDescriptorIsResolved } from "../../Schema.ts";
 
 interface UnrealOpenRPCVisitorOptions extends NunjucksOpenRPCVisitorOptions {}
 
@@ -69,7 +70,12 @@ export class UnrealOpenRPCVisitor extends NunjucksOpenRPCVisitor {
 
     for (const method of methods) {
       includeMap.set(`${changeCase.pascalCase(method.name)}RequestArgs.h`, "local");
-      includeMap.set(`${changeCase.pascalCase(method.name)}ResponseData.h`, "local");
+      if (method.result) {
+        const result = ensureContentDescriptorIsResolved(method.result);
+        if (result.schema.type === "object") {
+          includeMap.set(`${changeCase.pascalCase(method.name)}Response.h`, "local");
+        }
+      }
     }
 
     methodsRenderMap.add(
@@ -93,12 +99,52 @@ export class UnrealOpenRPCVisitor extends NunjucksOpenRPCVisitor {
 
   visitMethod(method: MethodObject) {
     const methodRenderMap = new RenderMap();
+    const blueprintFunctionLibraryIncludeMap: IncludeMap = new Map();
     const path = `Source/${this.#pluginName}/Public`;
     const context = { ...this.getCommonContext(), includeMap: this.#includeMap, method };
     methodRenderMap.add(`${path}/${changeCase.pascalCase(method.name)}RequestArgs.h`, this.render("requestArgsH.njk", context));
-    methodRenderMap.add(`${path}/${changeCase.pascalCase(method.name)}ResponseData.h`, this.render("responseDataH.njk", context));
+    blueprintFunctionLibraryIncludeMap.set(
+      `${changeCase.pascalCase(method.name)}RequestArgs.h`,
+      "local",
+    );
+    methodRenderMap.add(
+      `${path}/${changeCase.pascalCase(method.name)}RequestArgsBlueprintFunctionLibrary.h`,
+      this.render("requestArgsBlueprintFunctionLibraryH.njk", {
+        ...context,
+        includeMap: blueprintFunctionLibraryIncludeMap,
+      }),
+    );
     this.#includeMap.clear();
     return methodRenderMap;
+  }
+
+  visitMethodResult(method: MethodObject, result: ContentDescriptorObject) {
+    const resultRenderMap = new RenderMap();
+    const resultIncludeMap: IncludeMap = new Map();
+    const path = `Source/${this.#pluginName}/Public`;
+
+    if (result.schema.type === "object") {
+      for (const [childPropertyName, childPropertySchema] of Object.entries(result.schema.properties)) {
+        const childRenderMap = this.#createTypeForPropertyIfNeeded(
+          [method.name, "Response"],
+          childPropertyName,
+          childPropertySchema as JSONSchemaObject, // TODO: Get rid of this 'as'
+          result.required,
+        );
+        resultRenderMap.mergeWith(childRenderMap);
+        if (childRenderMap) {
+          resultIncludeMap.set(
+            `${this.#getObjectPropertyFilename([method.name, "Response"], childPropertyName)}`,
+            "local",
+          );
+        }
+      }
+
+      const context = { ...this.getCommonContext(), includeMap: resultIncludeMap, method };
+      resultRenderMap.add(`${path}/${changeCase.pascalCase(method.name)}Response.h`, this.render("ResponseH.njk", context));
+    }
+
+    return resultRenderMap;
   }
 
   visitMethodParam(method: MethodObject, param: ContentDescriptorObject) {
@@ -150,6 +196,7 @@ export class UnrealOpenRPCVisitor extends NunjucksOpenRPCVisitor {
       case "object": {
         const customTypeRenderMap = new RenderMap();
         const customTypeIncludeMap: IncludeMap = new Map();
+        const customTypeBlueprintFunctionLibraryIncludeMap: IncludeMap = new Map();
 
         if (propertySchema.properties) {
           for (const [childPropertyName, childPropertySchema] of Object.entries(propertySchema.properties)) {
@@ -182,6 +229,19 @@ export class UnrealOpenRPCVisitor extends NunjucksOpenRPCVisitor {
         customTypeRenderMap.add(
           `${path}/${this.#getObjectPropertyFilename(propertyParents, propertyName)}`,
           this.render("customTypeH.njk", context),
+        );
+
+        customTypeBlueprintFunctionLibraryIncludeMap.set(
+          `${this.#getObjectPropertyFilename(propertyParents, propertyName)}`,
+          "local",
+        );
+
+        customTypeRenderMap.add(
+          `${path}/${this.#getObjectPropertyBlueprintFunctionLibraryFilename(propertyParents, propertyName)}`,
+          this.render("customTypeBlueprintFunctionLibraryH.njk", {
+            ...context,
+            includeMap: customTypeBlueprintFunctionLibraryIncludeMap,
+          }),
         );
 
         return customTypeRenderMap;
@@ -366,5 +426,9 @@ export class UnrealOpenRPCVisitor extends NunjucksOpenRPCVisitor {
 
   #getObjectPropertyFilename(propertyParents: string[], propertyName: string) {
     return `${this.#getPrefixedPropertyName(propertyParents, propertyName)}.h`;
+  }
+
+  #getObjectPropertyBlueprintFunctionLibraryFilename(propertyParents: string[], propertyName: string) {
+    return `${this.#getPrefixedPropertyName(propertyParents, propertyName)}BlueprintFunctionLibrary.h`;
   }
 }

@@ -11,7 +11,7 @@ import {
 } from "./types.ts";
 import { RenderMap } from "./RenderMap.ts";
 
-function ensureContentDescriptorIsResolved(
+export function ensureContentDescriptorIsResolved(
   contentDescriptorOrReference: ContentDescriptorOrReference,
 ): ContentDescriptorObject {
   if (isReferenceObject(contentDescriptorOrReference)) {
@@ -80,6 +80,17 @@ export class Schema {
           visitor.visitMethodParam(
             method,
             ensureContentDescriptorIsResolved(param),
+          ),
+        );
+      }
+
+      const result = method.result ? ensureContentDescriptorIsResolved(method.result) : undefined;
+
+      if (result) {
+        this.#mergeRenderMap(
+          visitor.visitMethodResult(
+            method,
+            result,
           ),
         );
       }

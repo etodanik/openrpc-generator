@@ -1,0 +1,31 @@
+{% extends "layout.njk" %}
+{% import "macros.njk" as macros %}
+
+{% block main %}
+#pragma once
+
+{{ macros.printIncludes(includeMap) }}
+#include "{{ prefixedPropertyName }}BlueprintFunctionLibrary.generated.h"
+
+UCLASS()
+class {{apiTag}} U{{ prefixedPropertyName }}BlueprintFunctionLibrary : public UBlueprintFunctionLibrary
+{
+    GENERATED_BODY()
+
+public:
+	{% for childPropertyName, childPropertySchema in propertySchema.properties %}
+		{% if not childPropertySchema.required %}
+			UFUNCTION(BlueprintCallable, Category="RPC")
+			static bool IsSet{{ prefixedPropertyName }}{{ childPropertyName | pascalCase }}(UPARAM(ref) const F{{ prefixedPropertyName }}& {{ prefixedPropertyName }}) { return {{ prefixedPropertyName }}.{{ childPropertyName }}.IsSet(); }
+			UFUNCTION(BlueprintCallable, Category="RPC")
+			static {{ [prefixedPropertyName] | unrealPropertyClassAttributeType(childPropertyName, childPropertySchema, true) | safe }} Get{{ prefixedPropertyName }}{{ childPropertyName | pascalCase }}(UPARAM(ref) const F{{ prefixedPropertyName }}& {{ prefixedPropertyName }}) { return {{ prefixedPropertyName }}.{{ childPropertyName }}.GetValue(); }
+			UFUNCTION(BlueprintCallable, Category="RPC")
+			static void Set{{ prefixedPropertyName }}{{ childPropertyName | pascalCase }}(UPARAM(ref) F{{ prefixedPropertyName }}& {{ prefixedPropertyName }}, {{ [prefixedPropertyName] | unrealPropertyMethodArgumentType(childPropertyName, childPropertySchema, true) | safe }} NewValue) { {{ prefixedPropertyName }}.{{ childPropertyName }} = NewValue; }
+			UFUNCTION(BlueprintCallable, Category="RPC")
+			static void Reset{{ prefixedPropertyName }}{{ childPropertyName | pascalCase }}(UPARAM(ref) F{{ prefixedPropertyName }}& {{ prefixedPropertyName }}) { {{ prefixedPropertyName }}.{{ childPropertyName }}.Reset(); }
+		{% endif %}
+	{% endfor %}
+};
+{% endblock %}
+
+

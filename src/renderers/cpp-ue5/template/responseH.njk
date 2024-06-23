@@ -1,0 +1,31 @@
+{% extends "layout.njk" %}
+{% import "macros.njk" as macros %}
+
+{% block main %}
+#pragma once
+
+{{ macros.printIncludes(includeMap) }}
+#include "{{ method.name | pascalCase }}Response.generated.h"
+
+USTRUCT(BlueprintType)
+struct {{apiTag}} F{{ method.name | pascalCase }}Response
+{
+	GENERATED_BODY()
+
+	{% for childPropertyName, childPropertySchema in method.result.schema.properties %}
+		UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		{{ [method.name, "Response"] | unrealPropertyClassAttributeType(childPropertyName, childPropertySchema) | safe }} {{ childPropertyName }};
+	{% endfor %}
+
+	{% if method.result.schema.required and method.result.schema.required.length > 0 %}
+	{# We only need the default constructor if there is at least one non optional field, otherwise the constructor with all optionals also serves as default #}
+	F{{ method.name | pascalCase }}Response() {}
+	{% endif %}
+
+	F{{ method.name | pascalCase }}Response(
+		{% for childPropertyName, childPropertySchema in method.result.schema.properties %}{{ [method.name, "Response"] | unrealPropertyMethodArgumentType(childPropertyName, childPropertySchema) | safe }} {{ childPropertyName }}In{% if not method.result.schema.required or (method.result.schema.required and childPropertyName not in method.result.schema.required) %} = {{ [method.name, "Response"] | unrealPropertyClassAttributeType(childPropertyName, childPropertySchema) | safe }}(){% endif %}{% if loop.last != true %},{% endif %}{% endfor %}
+	) : {% for childPropertyName, childPropertySchema in method.result.schema.properties %}{{ childPropertyName }}({{ childPropertyName }}In){% if loop.last != true %},{% endif %}{% endfor %} {}
+};
+
+DECLARE_DYNAMIC_DELEGATE_OneParam(F{{ method.name | pascalCase }}Callback, {{ macros.methodResponseType(method) }}, Response);
+{% endblock %}
